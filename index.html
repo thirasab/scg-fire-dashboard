@@ -2,171 +2,250 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SCG Fire Extinguisher Central Dashboard</title>
-  <!-- Bootstrap 5, FontAwesome, Chart.js -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SCG Fire Extinguisher Dashboard</title>
+  
+  <!-- Bootstrap 5 & FontAwesome & Chart.js -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --scg-red: #d32f2f;
       --scg-dark: #b71c1c;
       --scg-gray: #f8f9fa;
     }
+    
+    /* ปรับขนาดฟอนต์มาตรฐานให้อ่านง่าย กระชับ */
     body {
       background-color: #f1f4f8;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 0.85rem; /* ~13.6px */
+      color: #333;
     }
+
     .navbar-scg {
       background: #ffffff;
-      border-bottom: 3px solid var(--scg-red);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      border-bottom: 2.5px solid var(--scg-red);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
+
+    .brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .brand-sub {
+      font-size: 0.72rem;
+      color: #666;
+    }
+
+    /* ปุ่มแท็บสลับหน้า */
     .nav-pills .nav-link {
+      font-size: 0.8rem;
       font-weight: 600;
       color: #555;
-      border-radius: 8px;
-      padding: 8px 18px;
+      border-radius: 6px;
+      padding: 6px 12px;
     }
     .nav-pills .nav-link.active {
       background-color: var(--scg-red);
       color: #fff;
     }
+
+    /* Card สรุปตัวเลข KPI */
+    .card-kpi {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #ffffff;
+    }
+    .kpi-title {
+      font-size: 0.75rem;
+      color: #6c757d;
+      font-weight: 600;
+    }
+    .kpi-number {
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    /* ตารางข้อมูล */
+    .table {
+      font-size: 0.8rem;
+      margin-bottom: 0;
+    }
+    .table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      background-color: #f8f9fa;
+      padding: 8px 10px;
+    }
+    .table td {
+      padding: 8px 10px;
+      vertical-align: middle;
+      white-space: nowrap; /* ไม่ให้ตัดคำจนแถวบวมในมือถือ */
+    }
+
+    /* ป้ายสถานะ (Badges) */
     .badge-normal { background-color: #2e7d32; color: #fff; }
     .badge-warning { background-color: #f57c00; color: #fff; }
     .badge-danger { background-color: #c62828; color: #fff; }
-    .card-kpi {
-      border: none;
-      border-radius: 12px;
-      transition: transform 0.2s;
-    }
-    .card-kpi:hover {
-      transform: translateY(-3px);
+
+    /* ปรับแต่งสำหรับจอมือถือโดยเฉพาะ */
+    @media (max-width: 768px) {
+      .container-fluid {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+      .brand-title {
+        font-size: 0.85rem;
+      }
+      .brand-sub {
+        display: none; /* ซ่อนคำอธิบายยาวๆ ในมือถือ */
+      }
+      .kpi-number {
+        font-size: 1.25rem;
+      }
+      .card-kpi {
+        padding: 8px 10px;
+      }
+      .btn-action-mobile {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+      }
+      .chart-container {
+        max-width: 190px !important;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Navbar with SCG Logo -->
-  <nav class="navbar navbar-scg py-2 mb-4">
-    <div class="container-fluid px-4">
+  <!-- Navbar -->
+  <nav class="navbar navbar-scg py-2 mb-3">
+    <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
-        <svg class="me-3" style="height: 38px;" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- SCG Logo -->
+        <svg class="me-2" style="height: 30px;" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="80" height="80" rx="8" fill="#d32f2f"/>
           <path d="M22 40 L58 40 M40 22 L40 58" stroke="white" stroke-width="8" stroke-linecap="round"/>
-          <text x="95" y="52" fill="#d32f2f" font-size="42" font-weight="900" font-family="Arial, sans-serif">SCG</text>
+          <text x="95" y="52" fill="#d32f2f" font-size="44" font-weight="900" font-family="Arial, sans-serif">SCG</text>
         </svg>
         <div>
-          <h5 class="m-0 fw-bold text-dark">ระบบบริหารจัดการและตรวจเช็คถังดับเพลิง (Fire Safety Dashboard)</h5>
-          <small class="text-muted">ดึงข้อมูลสดจาก Google Sheets | อายุถัง 5 ปี | แจ้งเตือนล่วงหน้า 3 เดือน</small>
+          <div class="brand-title">ถังดับเพลิง Fire Safety</div>
+          <div class="brand-sub">ตรวจเช็คอายุ 5 ปี & แจ้งเตือน 3 เดือน (CM.5 - 11)</div>
         </div>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <span id="syncStatus" class="badge bg-light text-muted border">พร้อมใช้งาน</span>
-        <button class="btn btn-outline-danger btn-sm" onclick="initApp()">
-          <i class="fa-solid fa-rotate me-1"></i> ซิงค์ข้อมูลทั้งหมด
+      <div class="d-flex align-items-center gap-1">
+        <span id="syncStatus" class="badge bg-light text-muted border d-none d-sm-inline-block">พร้อม</span>
+        <button class="btn btn-outline-danger btn-sm py-1 px-2" style="font-size: 0.75rem;" onclick="initApp()">
+          <i class="fa-solid fa-rotate"></i> <span class="d-none d-sm-inline">รีเฟรช</span>
         </button>
       </div>
     </div>
   </nav>
 
-  <div class="container-fluid px-4">
-    <!-- เมนูนำทาง (Navigation Tabs) -->
-    <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 shadow-sm" id="dashboardTab" role="tablist">
-      <li class="nav-item">
-        <button class="nav-link active" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overviewTabPane" type="button">
-          <i class="fa-solid fa-chart-pie me-2"></i> สรุปภาพรวมทั้งหมด (Overview)
+  <div class="container-fluid px-3">
+    
+    <!-- เมนูแท็บ -->
+    <ul class="nav nav-pills mb-3 bg-white p-1 rounded-3 shadow-sm" id="dashboardTab" role="tablist">
+      <li class="nav-item flex-fill text-center">
+        <button class="nav-link active w-100 py-1" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overviewTabPane" type="button">
+          <i class="fa-solid fa-chart-pie me-1"></i> ภาพรวม (Overview)
         </button>
       </li>
-      <li class="nav-item">
-        <button class="nav-link" id="cm-tab" data-bs-toggle="pill" data-bs-target="#cmTabPane" type="button">
-          <i class="fa-solid fa-table-list me-2"></i> จัดการถังแยกตาม CM (CRUD)
+      <li class="nav-item flex-fill text-center">
+        <button class="nav-link w-100 py-1" id="cm-tab" data-bs-toggle="pill" data-bs-target="#cmTabPane" type="button">
+          <i class="fa-solid fa-list-check me-1"></i> จัดการถัง (ราย CM)
         </button>
       </li>
     </ul>
 
     <div class="tab-content" id="dashboardTabContent">
       
-      <!-- ================= 1. หน้าสรุปภาพรวมทั้งหมด (OVERVIEW) ================= -->
+      <!-- ================= 1. แท็บสรุปภาพรวมทั้งหมด ================= -->
       <div class="tab-pane fade show active" id="overviewTabPane" role="tabpanel">
         
-        <!-- แถบการ์ด KPI รวมทั้งโรงงาน -->
-        <div class="row g-3 mb-4">
-          <div class="col-md-3">
-            <div class="card card-kpi bg-white shadow-sm p-3 border-start border-4 border-primary">
-              <div class="text-muted small fw-bold">ถังดับเพลิงทั้งหมด (ทุก CM)</div>
-              <div class="d-flex align-items-center justify-content-between mt-2">
-                <h2 id="allTotal" class="fw-bold mb-0 text-primary">0</h2>
-                <i class="fa-solid fa-fire-extinguisher fa-2x text-primary opacity-25"></i>
+        <!-- การ์ด KPI (บนมือถือเรียงเป็น 2 คอลัมน์) -->
+        <div class="row g-2 mb-3">
+          <div class="col-6 col-md-3">
+            <div class="card card-kpi shadow-sm border-start border-3 border-primary">
+              <div class="kpi-title">ถังทั้งหมด</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span id="allTotal" class="kpi-number text-primary">0</span>
+                <i class="fa-solid fa-fire-extinguisher text-primary opacity-25 d-none d-sm-block"></i>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card card-kpi bg-white shadow-sm p-3 border-start border-4 border-success">
-              <div class="text-muted small fw-bold">สถานะปกติ (> 3 เดือน)</div>
-              <div class="d-flex align-items-center justify-content-between mt-2">
-                <h2 id="allNormal" class="fw-bold mb-0 text-success">0</h2>
-                <i class="fa-solid fa-circle-check fa-2x text-success opacity-25"></i>
+          <div class="col-6 col-md-3">
+            <div class="card card-kpi shadow-sm border-start border-3 border-success">
+              <div class="kpi-title">ปกติ (> 3 ด.)</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span id="allNormal" class="kpi-number text-success">0</span>
+                <i class="fa-solid fa-circle-check text-success opacity-25 d-none d-sm-block"></i>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card card-kpi bg-white shadow-sm p-3 border-start border-4 border-warning">
-              <div class="text-muted small fw-bold">ต้องเตรียมเปลี่ยน (เตือนใน 3 เดือน)</div>
-              <div class="d-flex align-items-center justify-content-between mt-2">
-                <h2 id="allWarning" class="fw-bold mb-0 text-warning">0</h2>
-                <i class="fa-solid fa-bell fa-2x text-warning opacity-25"></i>
+          <div class="col-6 col-md-3">
+            <div class="card card-kpi shadow-sm border-start border-3 border-warning">
+              <div class="kpi-title">เตือน (ใน 3 ด.)</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span id="allWarning" class="kpi-number text-warning">0</span>
+                <i class="fa-solid fa-bell text-warning opacity-25 d-none d-sm-block"></i>
               </div>
             </div>
           </div>
-          <div class="col-md-3">
-            <div class="card card-kpi bg-white shadow-sm p-3 border-start border-4 border-danger">
-              <div class="text-muted small fw-bold">หมดอายุแล้ว (เกิน 5 ปี)</div>
-              <div class="d-flex align-items-center justify-content-between mt-2">
-                <h2 id="allExpired" class="fw-bold mb-0 text-danger">0</h2>
-                <i class="fa-solid fa-triangle-exclamation fa-2x text-danger opacity-25"></i>
+          <div class="col-6 col-md-3">
+            <div class="card card-kpi shadow-sm border-start border-3 border-danger">
+              <div class="kpi-title">หมดอายุ (> 5 ปี)</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span id="allExpired" class="kpi-number text-danger">0</span>
+                <i class="fa-solid fa-triangle-exclamation text-danger opacity-25 d-none d-sm-block"></i>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- แถวที่ 2: สรุปแยก CM และ กราฟภาพรวม -->
-        <div class="row g-4 mb-4">
-          <!-- ตารางสรุปเปรียบเทียบแต่ละ CM -->
+        <!-- แถวที่ 2: ตารางสรุปราย CM และ กราฟ Donut -->
+        <div class="row g-3 mb-3">
           <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-header bg-white py-3">
-                <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-industry text-danger me-2"></i> สรุปสถานะแยกตามสายการผลิต (CM Status Breakdown)</h6>
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-white py-2 px-3">
+                <span class="fw-bold text-dark"><i class="fa-solid fa-industry text-danger me-1"></i> สรุปสถานะแยกตามสายการผลิต</span>
               </div>
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                  <thead class="table-light">
+                <table class="table table-hover align-middle">
+                  <thead>
                     <tr>
                       <th>สายการผลิต</th>
-                      <th class="text-center">จำนวนทั้งหมด</th>
-                      <th class="text-center">ปกติ</th>
-                      <th class="text-center">เตือนล่วงหน้า (3 ด.)</th>
-                      <th class="text-center">หมดอายุแล้ว</th>
-                      <th class="text-center">ความพร้อมใช้งาน</th>
+                      <th class="text-center">รวม</th>
+                      <th class="text-center text-success">ปกติ</th>
+                      <th class="text-center text-warning">เตือน 3ด.</th>
+                      <th class="text-center text-danger">หมดอายุ</th>
+                      <th class="text-center" style="min-width: 100px;">ความพร้อม</th>
                     </tr>
                   </thead>
                   <tbody id="summaryTableBody">
-                    <tr><td colspan="6" class="text-center py-4 text-muted">กำลังประมวลผล...</td></tr>
+                    <tr><td colspan="6" class="text-center py-3 text-muted">กำลังโหลด...</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
 
-          <!-- กราฟ Donut Chart -->
+          <!-- กราฟ Donut -->
           <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
-              <div class="card-header bg-white py-3">
-                <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-chart-pie text-danger me-2"></i> สัดส่วนความพร้อมใช้งาน</h6>
+              <div class="card-header bg-white py-2 px-3">
+                <span class="fw-bold text-dark"><i class="fa-solid fa-chart-pie text-danger me-1"></i> สัดส่วนความพร้อม</span>
               </div>
-              <div class="card-body d-flex align-items-center justify-content-center">
-                <div style="width: 100%; max-width: 250px;">
+              <div class="card-body p-2 d-flex align-items-center justify-content-center">
+                <div class="chart-container" style="width: 100%; max-width: 210px;">
                   <canvas id="overviewChart"></canvas>
                 </div>
               </div>
@@ -174,29 +253,29 @@
           </div>
         </div>
 
-        <!-- ตาราง Action List: ถังที่ต้องเฝ้าระวัง / ดำเนินการด่วน (จากทุก CM) -->
+        <!-- Action List: ถังที่ต้องเฝ้าระวังหรือเปลี่ยนด่วน -->
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 fw-bold text-danger">
-              <i class="fa-solid fa-triangle-exclamation me-2"></i> รายการถังที่ต้องดำเนินการ (หมดอายุแล้ว หรือเตือนล่วงหน้า 3 เดือน)
-            </h6>
-            <span class="badge bg-danger" id="urgentCount">0 รายการ</span>
+          <div class="card-header bg-white py-2 px-3 d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-danger">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i> รายการที่ต้องดำเนินการด่วน
+            </span>
+            <span class="badge bg-danger" id="urgentCount" style="font-size: 0.7rem;">0 ถัง</span>
           </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+            <table class="table table-hover align-middle">
+              <thead>
                 <tr>
-                  <th>สายการผลิต</th>
+                  <th>CM</th>
                   <th>รหัสถัง</th>
-                  <th>ตำแหน่งติดตั้ง</th>
-                  <th>ประเภท</th>
-                  <th>วันที่ผลิต</th>
-                  <th>วันหมดอายุ (5 ปี)</th>
+                  <th>สถานที่ติดตั้ง</th>
+                  <th>ชนิด</th>
+                  <th>วันผลิต</th>
+                  <th>วันหมดอายุ</th>
                   <th>สถานะ</th>
                 </tr>
               </thead>
               <tbody id="urgentTableBody">
-                <tr><td colspan="7" class="text-center py-4 text-muted">ไม่มีถังที่หมดอายุหรือใกล้หมดอายุ</td></tr>
+                <tr><td colspan="7" class="text-center py-3 text-muted">ไม่มีรายการเร่งด่วน</td></tr>
               </tbody>
             </table>
           </div>
@@ -204,53 +283,50 @@
 
       </div>
 
-      <!-- ================= 2. หน้าจัดการข้อมูลแยกตาม CM (CRUD) ================= -->
+      <!-- ================= 2. แท็บจัดการถังราย CM (CRUD) ================= -->
       <div class="tab-pane fade" id="cmTabPane" role="tabpanel">
         
-        <div class="card p-3 mb-4 shadow-sm border-0">
-          <div class="row g-3 align-items-center">
-            <div class="col-md-4">
-              <label class="form-label fw-bold mb-1"><i class="fa-solid fa-industry text-danger me-1"></i> เลือกสายการผลิต:</label>
-              <select id="cmSelect" class="form-select border-danger" onchange="filterCMData()">
+        <div class="card p-2 p-md-3 mb-3 shadow-sm border-0">
+          <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-4">
+              <select id="cmSelect" class="form-select form-select-sm border-danger" onchange="filterCMData()">
                 <option value="CM_5_6">Cement Mill 5 - 6 (CM.5-6)</option>
                 <option value="CM_7_9">Cement Mill 7 - 9 (CM.7-9)</option>
                 <option value="CM_10_11">Cement Mill 10 - 11 (CM.10-11)</option>
               </select>
             </div>
-            <div class="col-md-5">
-              <label class="form-label fw-bold mb-1"><i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหาใน CM นี้:</label>
-              <input type="text" id="searchInput" class="form-control" placeholder="พิมพ์รหัสถัง หรือ ตำแหน่ง..." onkeyup="filterTanks()">
+            <div class="col-8 col-md-5">
+              <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="ค้นหารหัส หรือ ตำแหน่ง..." onkeyup="filterTanks()">
             </div>
-            <div class="col-md-3 text-md-end pt-md-4">
-              <button class="btn btn-danger w-100" onclick="openAddModal()">
-                <i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียนถังใหม่
+            <div class="col-4 col-md-3 text-end">
+              <button class="btn btn-danger btn-sm w-100" onclick="openAddModal()">
+                <i class="fa-solid fa-plus"></i> <span class="d-none d-sm-inline">เพิ่มถังใหม่</span><span class="d-inline d-sm-none">เพิ่ม</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- ตารางข้อมูลถังของ CM ที่เลือก -->
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-white py-3">
-            <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-fire-extinguisher text-danger me-2"></i> รายการถังดับเพลิงในสายการผลิตที่เลือก</h6>
+          <div class="card-header bg-white py-2 px-3">
+            <span class="fw-bold text-dark"><i class="fa-solid fa-fire-extinguisher text-danger me-1"></i> รายการถังดับเพลิงใน CM ที่เลือก</span>
           </div>
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
+            <table class="table table-hover align-middle">
+              <thead>
                 <tr>
                   <th>รหัสถัง</th>
                   <th>ตำแหน่งติดตั้ง</th>
-                  <th>ประเภท</th>
+                  <th>ชนิด</th>
                   <th>ขนาด</th>
-                  <th>วันที่ผลิต</th>
+                  <th>วันผลิต</th>
                   <th>วันหมดอายุ (5 ปี)</th>
-                  <th>สถานะการเตือน</th>
+                  <th>สถานะ</th>
                   <th>หมายเหตุ</th>
                   <th class="text-center">จัดการ</th>
                 </tr>
               </thead>
               <tbody id="tableBody">
-                <tr><td colspan="9" class="text-center py-4 text-muted">กำลังเตรียมโหลดข้อมูล...</td></tr>
+                <tr><td colspan="9" class="text-center py-3 text-muted">กำลังเตรียมข้อมูล...</td></tr>
               </tbody>
             </table>
           </div>
@@ -261,53 +337,53 @@
     </div>
   </div>
 
-  <!-- Modal สำหรับ เพิ่ม / แก้ไข ถังดับเพลิง -->
+  <!-- Modal สำหรับ เพิ่ม / แก้ไข ถัง -->
   <div class="modal fade" id="tankModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title" id="modalTitle">ลงทะเบียนถังดับเพลิง</h5>
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="font-size: 0.85rem;">
+        <div class="modal-header bg-danger text-white py-2 px-3">
+          <h6 class="modal-title fw-bold" id="modalTitle">ลงทะเบียนถังดับเพลิง</h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body p-3">
           <form id="tankForm">
             <input type="hidden" id="tankId">
-            <div class="mb-3">
-              <label class="form-label fw-bold">รหัส/หมายเลขถัง *</label>
-              <input type="text" id="tankCode" class="form-control" placeholder="เช่น Z5F1D15.01" required>
+            <div class="mb-2">
+              <label class="form-label mb-1 fw-bold">รหัส/หมายเลขถัง *</label>
+              <input type="text" id="tankCode" class="form-control form-control-sm" placeholder="เช่น Z5F1D15.01" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">ตำแหน่งติดตั้ง *</label>
-              <input type="text" id="tankLocation" class="form-control" placeholder="เช่น ข้างหม้อ CM.5 ชั้นพื้น" required>
+            <div class="mb-2">
+              <label class="form-label mb-1 fw-bold">ตำแหน่งติดตั้ง *</label>
+              <input type="text" id="tankLocation" class="form-control form-control-sm" placeholder="เช่น ข้างหม้อ CM.5 ชั้นพื้น" required>
             </div>
-            <div class="row g-2 mb-3">
+            <div class="row g-2 mb-2">
               <div class="col-6">
-                <label class="form-label fw-bold">ประเภทถัง</label>
-                <select id="tankType" class="form-select">
-                  <option value="เคมีแห้ง (Dry Chemical)">เคมีแห้ง (Dry Chemical)</option>
+                <label class="form-label mb-1 fw-bold">ประเภทถัง</label>
+                <select id="tankType" class="form-select form-select-sm">
+                  <option value="เคมีแห้ง (Dry Chemical)">เคมีแห้ง</option>
                   <option value="CO2">ก๊าซ CO2</option>
                   <option value="ฮาโลตรอน/โฟม">ฮาโลตรอน/โฟม</option>
                 </select>
               </div>
               <div class="col-6">
-                <label class="form-label fw-bold">ขนาด</label>
-                <input type="text" id="tankCapacity" class="form-control" placeholder="เช่น 15 lbs">
+                <label class="form-label mb-1 fw-bold">ขนาด</label>
+                <input type="text" id="tankCapacity" class="form-control form-control-sm" placeholder="เช่น 15 lbs">
               </div>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">วันที่ผลิต (MFG Date) *</label>
-              <input type="date" id="tankMfgDate" class="form-control" required>
-              <small class="text-muted">ระบบคำนวณวันหมดอายุ 5 ปี (+เตือนล่วงหน้า 3 เดือน) อัตโนมัติ</small>
+            <div class="mb-2">
+              <label class="form-label mb-1 fw-bold">วันที่ผลิต (MFG Date) *</label>
+              <input type="date" id="tankMfgDate" class="form-control form-control-sm" required>
+              <small class="text-muted" style="font-size: 0.7rem;">ระบบคำนวณวันหมดอายุ 5 ปีอัตโนมัติ</small>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">หมายเหตุ</label>
-              <textarea id="tankNote" class="form-control" rows="2"></textarea>
+            <div class="mb-2">
+              <label class="form-label mb-1 fw-bold">หมายเหตุ</label>
+              <textarea id="tankNote" class="form-control form-control-sm" rows="2"></textarea>
             </div>
           </form>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-          <button type="button" class="btn btn-danger" id="btnSave" onclick="saveData()">บันทึกข้อมูล</button>
+        <div class="modal-footer py-1 px-3">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-danger btn-sm" id="btnSave" onclick="saveData()">บันทึกข้อมูล</button>
         </div>
       </div>
     </div>
@@ -315,8 +391,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // ** ใส่ Web App URL จาก Google Apps Script ที่ Deploy แล้ว **
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwv4rBcdrzc475zwEp2CWERq_W5CTtoVS2qiVmSlfu2CdxpEjRlLd2UggIRPOA6O6M/exec";
+    // ** ใส่ Web App URL ของ Google Apps Script ที่ Deploy แล้วตรงนี้ **
+    const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
     let allTanksData = [];
     let currentCMList = [];
@@ -328,32 +404,32 @@
     async function initApp() {
       const statusLabel = document.getElementById('syncStatus');
       statusLabel.className = 'badge bg-warning text-dark';
-      statusLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังซิงค์ข้อมูล...';
+      statusLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
       try {
-        // ดึงข้อมูล ALL จากทุก Sheet ทีเดียว
         const response = await fetch(`${SCRIPT_URL}?cm=ALL&t=${new Date().getTime()}`);
         const res = await response.json();
         
         if (res.success) {
-          allTanksData = res.data;
+          allTanksData = res.data || [];
           renderOverview(allTanksData);
           filterCMData();
           
           statusLabel.className = 'badge bg-success';
-          statusLabel.innerHTML = '<i class="fa-solid fa-check me-1"></i> เชื่อมต่อสมบูรณ์';
+          statusLabel.innerHTML = '<i class="fa-solid fa-check"></i> พร้อม';
         }
       } catch (err) {
         statusLabel.className = 'badge bg-danger';
-        statusLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> ซิงค์ไม่สำเร็จ';
+        statusLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ผิดพลาด';
+        document.getElementById('summaryTableBody').innerHTML = `
+          <tr><td colspan="6" class="text-center text-danger py-3">ดึงข้อมูลล้มเหลว: ${err.message}</td></tr>`;
       }
     }
 
-    // ฟังก์ชันคำนวณและแสดงผลหน้าสรุปภาพรวม (Overview)
     function renderOverview(data) {
       const total = data.length;
       const normal = data.filter(d => d.status === 'ปกติ').length;
-      const warning = data.filter(d => d.status.includes('ใกล้หมดอายุ')).length;
+      const warning = data.filter(d => d.status && d.status.includes('ใกล้หมดอายุ')).length;
       const expired = data.filter(d => d.status === 'หมดอายุแล้ว').length;
 
       document.getElementById('allTotal').innerText = total;
@@ -361,19 +437,18 @@
       document.getElementById('allWarning').innerText = warning;
       document.getElementById('allExpired').innerText = expired;
 
-      // 1. สรุปราย CM
       const cmGroups = ['CM_5_6', 'CM_7_9', 'CM_10_11'];
       const cmLabels = {
-        'CM_5_6': 'Cement Mill 5 - 6 (CM.5-6)',
-        'CM_7_9': 'Cement Mill 7 - 9 (CM.7-9)',
-        'CM_10_11': 'Cement Mill 10 - 11 (CM.10-11)'
+        'CM_5_6': 'CM.5 - 6',
+        'CM_7_9': 'CM.7 - 9',
+        'CM_10_11': 'CM.10 - 11'
       };
 
       const summaryHtml = cmGroups.map(cm => {
         const list = data.filter(d => d.cm === cm);
         const cTotal = list.length;
         const cNormal = list.filter(d => d.status === 'ปกติ').length;
-        const cWarning = list.filter(d => d.status.includes('ใกล้หมดอายุ')).length;
+        const cWarning = list.filter(d => d.status && d.status.includes('ใกล้หมดอายุ')).length;
         const cExpired = list.filter(d => d.status === 'หมดอายุแล้ว').length;
         const healthRate = cTotal > 0 ? Math.round((cNormal / cTotal) * 100) : 0;
 
@@ -385,9 +460,9 @@
             <td class="text-center text-warning fw-bold">${cWarning}</td>
             <td class="text-center text-danger fw-bold">${cExpired}</td>
             <td class="text-center">
-              <div class="progress" style="height: 18px;">
+              <div class="progress" style="height: 14px;">
                 <div class="progress-bar ${healthRate >= 80 ? 'bg-success' : (healthRate >= 50 ? 'bg-warning' : 'bg-danger')}" 
-                     role="progressbar" style="width: ${healthRate}%">
+                     style="width: ${healthRate}%; font-size: 0.65rem;">
                   ${healthRate}%
                 </div>
               </div>
@@ -397,12 +472,12 @@
       }).join('');
       document.getElementById('summaryTableBody').innerHTML = summaryHtml;
 
-      // 2. ตาราง Action List ด่วน (หมดอายุแล้ว หรือ เตือนใน 3 เดือน)
-      const urgentList = data.filter(d => d.status !== 'ปกติ');
-      document.getElementById('urgentCount').innerText = `${urgentList.length} รายการ`;
+      // Action List ด่วน
+      const urgentList = data.filter(d => d.status && d.status !== 'ปกติ');
+      document.getElementById('urgentCount').innerText = `${urgentList.length} ถัง`;
 
       if (urgentList.length === 0) {
-        document.getElementById('urgentTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-4 text-success"><i class="fa-solid fa-check-circle me-1"></i> ยอดเยี่ยม! ไม่มีถังดับเพลิงหมดอายุหรือใกล้หมดอายุในระบบ</td></tr>';
+        document.getElementById('urgentTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-3 text-success"><i class="fa-solid fa-circle-check me-1"></i> ไม่มีถังหมดอายุหรือใกล้หมดอายุในระบบ</td></tr>';
       } else {
         document.getElementById('urgentTableBody').innerHTML = urgentList.map(item => {
           const isExp = item.status === 'หมดอายุแล้ว';
@@ -415,8 +490,8 @@
               <td>${item.mfgDate || '-'}</td>
               <td class="fw-bold">${item.expDate || '-'}</td>
               <td>
-                <span class="badge ${isExp ? 'badge-danger' : 'badge-warning'} p-2">
-                  <i class="fa-solid ${isExp ? 'fa-triangle-exclamation' : 'fa-clock'} me-1"></i>${item.status}
+                <span class="badge ${isExp ? 'badge-danger' : 'badge-warning'} px-2 py-1" style="font-size: 0.7rem;">
+                  ${item.status}
                 </span>
               </td>
             </tr>
@@ -424,7 +499,6 @@
         }).join('');
       }
 
-      // 3. วาดกราฟ Donut
       renderChart(normal, warning, expired);
     }
 
@@ -435,22 +509,29 @@
       overviewChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['ปกติ', 'เตือนใน 3 เดือน', 'หมดอายุแล้ว'],
+          labels: ['ปกติ', 'เตือน 3ด.', 'หมดอายุ'],
           datasets: [{
             data: [normal, warning, expired],
-            backgroundColor: ['#2e7d32', '#f57c00', '#c62828']
+            backgroundColor: ['#2e7d32', '#f57c00', '#c62828'],
+            borderWidth: 1
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: true,
           plugins: {
-            legend: { position: 'bottom' }
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 10,
+                font: { size: 10 }
+              }
+            }
           }
         }
       });
     }
 
-    // กรองข้อมูลสำหรับหน้าจัดการราย CM
     function filterCMData() {
       const selectedCM = document.getElementById('cmSelect').value;
       currentCMList = allTanksData.filter(d => d.cm === selectedCM);
@@ -460,37 +541,31 @@
     function renderTable(list) {
       const tbody = document.getElementById('tableBody');
       if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">ไม่พบข้อมูลถังดับเพลิงใน CM นี้</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-3 text-muted">ไม่พบข้อมูลถังใน CM นี้</td></tr>';
         return;
       }
 
       tbody.innerHTML = list.map(item => {
         let badge = 'badge-normal';
-        let icon = '<i class="fa-solid fa-circle-check me-1"></i>';
-        if (item.status === 'หมดอายุแล้ว') {
-          badge = 'badge-danger';
-          icon = '<i class="fa-solid fa-triangle-exclamation me-1"></i>';
-        } else if (item.status.includes('ใกล้หมดอายุ')) {
-          badge = 'badge-warning';
-          icon = '<i class="fa-solid fa-bell me-1"></i>';
-        }
+        if (item.status === 'หมดอายุแล้ว') badge = 'badge-danger';
+        else if (item.status && item.status.includes('ใกล้หมดอายุ')) badge = 'badge-warning';
 
         return `
           <tr>
-            <td class="fw-bold">${item.code}</td>
+            <td class="fw-bold text-dark">${item.code}</td>
             <td>${item.location}</td>
-            <td><span class="badge bg-light text-dark border">${item.type}</span></td>
+            <td><span class="badge bg-light text-dark border" style="font-size: 0.7rem;">${item.type}</span></td>
             <td>${item.capacity}</td>
             <td>${item.mfgDate || '-'}</td>
             <td class="fw-semibold">${item.expDate || '-'}</td>
-            <td><span class="badge ${badge} p-2">${icon}${item.status}</span></td>
+            <td><span class="badge ${badge} px-2 py-1" style="font-size: 0.7rem;">${item.status}</span></td>
             <td class="small text-muted">${item.note || '-'}</td>
             <td class="text-center">
-              <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal('${item.id}')">
-                <i class="fa-solid fa-pen"></i>
+              <button class="btn btn-outline-primary btn-sm py-0 px-2 me-1" onclick="openEditModal('${item.id}')">
+                <i class="fa-solid fa-pen" style="font-size: 0.75rem;"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('${item.id}')">
-                <i class="fa-solid fa-trash"></i>
+              <button class="btn btn-outline-danger btn-sm py-0 px-2" onclick="deleteItem('${item.id}')">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
               </button>
             </td>
           </tr>
@@ -501,8 +576,8 @@
     function filterTanks() {
       const q = document.getElementById('searchInput').value.toLowerCase();
       const filtered = currentCMList.filter(t => 
-        t.code.toLowerCase().includes(q) || 
-        t.location.toLowerCase().includes(q)
+        (t.code && t.code.toLowerCase().includes(q)) || 
+        (t.location && t.location.toLowerCase().includes(q))
       );
       renderTable(filtered);
     }
@@ -559,7 +634,7 @@
       }
 
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังบันทึก...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> บันทึก...';
 
       try {
         const action = id ? 'UPDATE' : 'CREATE';
@@ -588,7 +663,7 @@
           alert('ลบไม่สำเร็จ: ' + res.error);
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาด: ' + err.message);
+        alert('เกิดข้อผิดพลาดในการลบ: ' + err.message);
       }
     }
   </script>
