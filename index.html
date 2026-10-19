@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCG Fire Extinguisher Dashboard</title>
+  <!-- Bootstrap 5 & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --scg-red: #d32f2f;
+      --scg-dark: #b71c1c;
+    }
+    body {
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+    .navbar-scg {
+      background: #ffffff;
+      border-bottom: 3px solid var(--scg-red);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .badge-normal { background-color: #2e7d32; color: #fff; }
+    .badge-warning { background-color: #f57c00; color: #fff; }
+    .badge-danger { background-color: #c62828; color: #fff; }
+    .table-hover tbody tr:hover { background-color: #fff9f9; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar มี Logo SCG -->
+  <nav class="navbar navbar-scg py-2 mb-4">
+    <div class="container-fluid px-4">
+      <div class="d-flex align-items-center">
+        <svg class="me-3" style="height: 38px;" viewBox="0 0 280 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="80" height="80" rx="8" fill="#d32f2f"/>
+          <path d="M22 40 L58 40 M40 22 L40 58" stroke="white" stroke-width="8" stroke-linecap="round"/>
+          <text x="95" y="52" fill="#d32f2f" font-size="42" font-weight="900" font-family="Arial, sans-serif">SCG</text>
+        </svg>
+        <div>
+          <h5 class="m-0 fw-bold text-dark">ระบบตรวจสอบและแจ้งเตือนถังดับเพลิง (Live Data)</h5>
+          <small class="text-muted">ดึงข้อมูลจริงจาก Google Sheets | อายุถัง 5 ปี | แจ้งเตือนล่วงหน้า 3 เดือน</small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span id="syncStatus" class="badge bg-light text-muted border">พร้อมใช้งาน</span>
+        <button class="btn btn-outline-danger btn-sm" onclick="loadRealData()">
+          <i class="fa-solid fa-rotate me-1"></i> รีเฟรช
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4">
+    <!-- ตัวเลือก CM & ช่องค้นหา -->
+    <div class="card p-3 mb-4 shadow-sm border-0">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-4">
+          <label class="form-label fw-bold mb-1"><i class="fa-solid fa-industry text-danger me-1"></i> เลือกสายการผลิต (CM):</label>
+          <select id="cmSelect" class="form-select border-danger" onchange="loadRealData()">
+            <option value="CM_5_6">Cement Mill 5 - 6 (CM.5-6)</option>
+            <option value="CM_7_9">Cement Mill 7 - 9 (CM.7-9)</option>
+            <option value="CM_10_11">Cement Mill 10 - 11 (CM.10-11)</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label fw-bold mb-1"><i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหาถัง (รหัส/ตำแหน่ง):</label>
+          <input type="text" id="searchInput" class="form-control" placeholder="พิมพ์เพื่อกรองข้อมูล..." onkeyup="filterTanks()">
+        </div>
+        <div class="col-md-3 text-md-end pt-md-4">
+          <button class="btn btn-danger w-100" onclick="openAddModal()">
+            <i class="fa-solid fa-circle-plus me-1"></i> ลงทะเบียนถังใหม่
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- สถิติ Dashboard Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card bg-white shadow-sm p-3 border-0 border-start border-4 border-primary">
+          <div class="text-muted small">จำนวนถังทั้งหมด</div>
+          <h3 id="statTotal" class="fw-bold mb-0 text-primary">0</h3>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-white shadow-sm p-3 border-0 border-start border-4 border-success">
+          <div class="text-muted small">ปกติ (> 3 เดือน)</div>
+          <h3 id="statNormal" class="fw-bold mb-0 text-success">0</h3>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-white shadow-sm p-3 border-0 border-start border-4 border-warning">
+          <div class="text-muted small">เตือนล่วงหน้า (หมดอายุใน 3 เดือน)</div>
+          <h3 id="statWarning" class="fw-bold mb-0 text-warning">0</h3>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card bg-white shadow-sm p-3 border-0 border-start border-4 border-danger">
+          <div class="text-muted small">หมดอายุแล้ว (เกิน 5 ปี)</div>
+          <h3 id="statExpired" class="fw-bold mb-0 text-danger">0</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- ตารางข้อมูลถัง -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="m-0 fw-bold text-dark"><i class="fa-solid fa-fire-extinguisher text-danger me-2"></i> รายการถังดับเพลิงในระบบ</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>รหัสถัง</th>
+              <th>ตำแหน่งติดตั้ง</th>
+              <th>ประเภท</th>
+              <th>ขนาด</th>
+              <th>วันที่ผลิต</th>
+              <th>วันหมดอายุ (5 ปี)</th>
+              <th>สถานะการเตือน</th>
+              <th>หมายเหตุ</th>
+              <th class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" class="text-center py-4 text-muted">กำลังเตรียมโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal สำหรับ CRUD -->
+  <div class="modal fade" id="tankModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="modalTitle">ลงทะเบียนถังดับเพลิง</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="tankForm">
+            <input type="hidden" id="tankId">
+            <div class="mb-3">
+              <label class="form-label fw-bold">รหัส/หมายเลขถัง *</label>
+              <input type="text" id="tankCode" class="form-control" placeholder="เช่น Z5F1D15.01" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">ตำแหน่งติดตั้ง *</label>
+              <input type="text" id="tankLocation" class="form-control" placeholder="เช่น ในอาคาร ข้างหม้อ CM.5" required>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label fw-bold">ประเภท</label>
+                <select id="tankType" class="form-select">
+                  <option value="เคมีแห้ง (Dry Chemical)">เคมีแห้ง (Dry Chemical)</option>
+                  <option value="CO2">ก๊าซ CO2</option>
+                  <option value="ฮาโลตรอน/โฟม">ฮาโลตรอน/โฟม</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label fw-bold">ขนาด</label>
+                <input type="text" id="tankCapacity" class="form-control" placeholder="เช่น 15 lbs">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">วันที่ผลิต (MFG Date) *</label>
+              <input type="date" id="tankMfgDate" class="form-control" required>
+              <small class="text-muted">ระบบคำนวณวันหมดอายุ 5 ปีนับจากวันผลิตให้อัตโนมัติ</small>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">หมายเหตุ</label>
+              <textarea id="tankNote" class="form-control" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-danger" id="btnSave" onclick="saveData()">บันทึกข้อมูล</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // URL Web App จาก Google Apps Script ที่ Deploy เรียบร้อยแล้ว
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwv4rBcdrzc475zwEp2CWERq_W5CTtoVS2qiVmSlfu2CdxpEjRlLd2UggIRPOA6O6M/exec";
+
+    let tankData = [];
+    const tankModal = new bootstrap.Modal(document.getElementById('tankModal'));
+
+    document.addEventListener('DOMContentLoaded', loadRealData);
+
+    // 1. ดึงข้อมูลจริงจาก Google Sheets
+    async function loadRealData() {
+      const cm = document.getElementById('cmSelect').value;
+      const statusLabel = document.getElementById('syncStatus');
+      const tbody = document.getElementById('tableBody');
+
+      statusLabel.className = 'badge bg-warning text-dark';
+      statusLabel.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังซิงค์ข้อมูล...';
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลจริงจาก Google Sheet...</td></tr>';
+
+      try {
+        const response = await fetch(`${SCRIPT_URL}?cm=${cm}&t=${new Date().getTime()}`);
+        const res = await response.json();
+        
+        if (res.success) {
+          tankData = res.data;
+          renderTable(tankData);
+          updateDashboard(tankData);
+          statusLabel.className = 'badge bg-success';
+          statusLabel.innerHTML = '<i class="fa-solid fa-check me-1"></i> ข้อมูลล่าสุด';
+        } else {
+          throw new Error(res.error || 'ไม่สามารถอ่านข้อมูลได้');
+        }
+      } catch (err) {
+        statusLabel.className = 'badge bg-danger';
+        statusLabel.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> เชื่อมต่อล้มเหลว';
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-4">ไม่สามารถดึงข้อมูลได้: ${err.message}<br><small class="text-muted">กรุณาตรวจสอบว่าวาง SCRIPT_URL ถูกต้อง และตั้งค่า Who has access เป็น Anyone แล้วหรือไม่</small></td></tr>`;
+      }
+    }
+
+    function renderTable(list) {
+      const tbody = document.getElementById('tableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">ยังไม่มีรายการถังในแผ่นงานนี้</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => {
+        let badge = 'badge-normal';
+        let icon = '<i class="fa-solid fa-circle-check me-1"></i>';
+        if (item.status === 'หมดอายุแล้ว') {
+          badge = 'badge-danger';
+          icon = '<i class="fa-solid fa-triangle-exclamation me-1"></i>';
+        } else if (item.status.includes('ใกล้หมดอายุ')) {
+          badge = 'badge-warning';
+          icon = '<i class="fa-solid fa-bell me-1"></i>';
+        }
+
+        return `
+          <tr>
+            <td class="fw-bold text-dark">${item.code}</td>
+            <td>${item.location}</td>
+            <td><span class="badge bg-light text-dark border">${item.type}</span></td>
+            <td>${item.capacity}</td>
+            <td>${item.mfgDate || '-'}</td>
+            <td class="fw-semibold">${item.expDate || '-'}</td>
+            <td><span class="badge ${badge} p-2">${icon}${item.status}</span></td>
+            <td class="small text-muted">${item.note || '-'}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal('${item.id}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('${item.id}')">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateDashboard(list) {
+      document.getElementById('statTotal').innerText = list.length;
+      document.getElementById('statNormal').innerText = list.filter(d => d.status === 'ปกติ').length;
+      document.getElementById('statWarning').innerText = list.filter(d => d.status.includes('ใกล้หมดอายุ')).length;
+      document.getElementById('statExpired').innerText = list.filter(d => d.status === 'หมดอายุแล้ว').length;
+    }
+
+    function filterTanks() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = tankData.filter(t => 
+        t.code.toLowerCase().includes(q) || 
+        t.location.toLowerCase().includes(q)
+      );
+      renderTable(filtered);
+    }
+
+    function openAddModal() {
+      document.getElementById('tankForm').reset();
+      document.getElementById('tankId').value = '';
+      document.getElementById('modalTitle').innerText = 'ลงทะเบียนถังใหม่';
+      tankModal.show();
+    }
+
+    function openEditModal(id) {
+      const item = tankData.find(t => String(t.id) === String(id));
+      if (!item) return;
+
+      document.getElementById('tankId').value = item.id;
+      document.getElementById('tankCode').value = item.code;
+      document.getElementById('tankLocation').value = item.location;
+      document.getElementById('tankType').value = item.type;
+      document.getElementById('tankCapacity').value = item.capacity;
+      document.getElementById('tankMfgDate').value = item.mfgDate;
+      document.getElementById('tankNote').value = item.note;
+
+      document.getElementById('modalTitle').innerText = 'แก้ไขข้อมูลถังดับเพลิง';
+      tankModal.show();
+    }
+
+    // 2. ส่งคำสั่ง CRUD บันทึกจริงลง Google Sheets
+    async function sendRequestToGAS(action, payload) {
+      const cm = document.getElementById('cmSelect').value;
+      const bodyData = JSON.stringify({ action, cm, payload });
+
+      // ใช้ fetch ส่งข้อมูลแบบ text/plain เพื่อหลบปัญหา CORS Preflight ใน Apps Script
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: bodyData
+      });
+      return await res.json();
+    }
+
+    async function saveData() {
+      const btn = document.getElementById('btnSave');
+      const id = document.getElementById('tankId').value;
+      const payload = {
+        id: id,
+        code: document.getElementById('tankCode').value.trim(),
+        location: document.getElementById('tankLocation').value.trim(),
+        type: document.getElementById('tankType').value,
+        capacity: document.getElementById('tankCapacity').value.trim(),
+        mfgDate: document.getElementById('tankMfgDate').value,
+        note: document.getElementById('tankNote').value.trim()
+      };
+
+      if (!payload.code || !payload.mfgDate) {
+        alert('กรุณากรอกรหัสถังและวันที่ผลิต');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> กำลังบันทึก...';
+
+      try {
+        const action = id ? 'UPDATE' : 'CREATE';
+        const res = await sendRequestToGAS(action, payload);
+        if (res.success) {
+          tankModal.hide();
+          loadRealData();
+        } else {
+          alert('บันทึกไม่สำเร็จ: ' + res.error);
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'บันทึกข้อมูล';
+      }
+    }
+
+    async function deleteItem(id) {
+      if (!confirm('ยืนยันลบถังดับเพลิงนี้ออกจาก Google Sheet?')) return;
+      try {
+        const res = await sendRequestToGAS('DELETE', { id });
+        if (res.success) {
+          loadRealData();
+        } else {
+          alert('ลบไม่สำเร็จ: ' + res.error);
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการลบ: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
